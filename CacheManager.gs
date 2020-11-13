@@ -4,6 +4,7 @@ function get(key, url, options = {}) {
     const d = new Date();
     
     const json = options.json || false;
+    const method = options.method || "GET";
     const validate = options.validate || (() => {return true});
     const format = options.format || ((a) => a);
     const timeout = options.timeout || 60 * 1000;
@@ -19,7 +20,12 @@ function get(key, url, options = {}) {
             return output;
         }
     }
-    const value = UrlFetchApp.fetch(url).getContentText();
+    const request = UrlFetchApp.fetch(url, {method: method, muteHttpExceptions: true});
+    const value = request.getContentText();
+    if (request.getResponseCode() != 200) {
+        Logger.log(request);
+        throw new Error("Request failed: " + value);
+    }
     const newJson = {
         u: new Date(),
         d: json ? format(JSON.parse(value)) : format(value)
